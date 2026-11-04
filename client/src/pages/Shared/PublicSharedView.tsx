@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api, { getApiUrl } from '../../services/api';
 import { GraduationCap, Download, Clock, Award, BookOpen, AlertCircle, FileText } from 'lucide-react';
 
 export const PublicSharedView: React.FC = () => {
@@ -10,8 +10,8 @@ export const PublicSharedView: React.FC = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    axios
-      .get(`/api/v1/public/share/${token}`)
+    api
+      .get(`/public/share/${token}`)
       .then((res) => {
         if (res.data.success) {
           setData(res.data);
@@ -94,7 +94,7 @@ export const PublicSharedView: React.FC = () => {
           {share.allowDownload && (
             <div className="mt-6 flex justify-center">
               <a
-                href={`/api/v1/public/share/${token}/pdf`}
+                href={getApiUrl(`/public/share/${token}/pdf`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs shadow-md shadow-brand-600/30 transition"

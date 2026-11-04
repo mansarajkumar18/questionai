@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../services/api';
+import api, { getApiUrl } from '../../services/api';
 import { FileText, Plus, Trash2, ArrowRight, Download, CheckCircle2 } from 'lucide-react';
 import { QuestionPaper } from '../../types';
 
@@ -115,7 +115,7 @@ export const PapersList: React.FC = () => {
                   </td>
                   <td className="py-4 px-6 text-right space-x-2">
                     <a
-                      href={`/api/v1/papers/${p.id}/pdf/questions`}
+                      href={getApiUrl(`/papers/${p.id}/pdf/questions`)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition"

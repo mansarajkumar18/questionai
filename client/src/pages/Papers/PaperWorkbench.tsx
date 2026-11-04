@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../../services/api';
+import api, { getApiUrl } from '../../services/api';
 import {
   FileText,
   KeyRound,
@@ -202,7 +202,7 @@ export const PaperWorkbench: React.FC = () => {
           {/* Quick Action Export Bar */}
           <div className="flex flex-wrap items-center gap-2.5">
             <a
-              href={`/api/v1/papers/${paper.id}/pdf/questions`}
+              href={getApiUrl(`/papers/${paper.id}/pdf/questions`)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs shadow-sm transition"
@@ -212,7 +212,7 @@ export const PaperWorkbench: React.FC = () => {
             </a>
 
             <a
-              href={`/api/v1/papers/${paper.id}/pdf/answers`}
+              href={getApiUrl(`/papers/${paper.id}/pdf/answers`)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold text-xs shadow-sm transition"
@@ -446,7 +446,7 @@ export const PaperWorkbench: React.FC = () => {
               </span>
             </div>
             <a
-              href={`/api/v1/papers/${paper.id}/pdf/answers`}
+              href={getApiUrl(`/papers/${paper.id}/pdf/answers`)}
               target="_blank"
               rel="noopener noreferrer"
               className="px-3 py-1 rounded-lg bg-amber-600 text-white font-semibold text-xs hover:bg-amber-500 transition"

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../services/api';
+import api, { getApiUrl } from '../../services/api';
 import { KeyRound, Download, ArrowRight } from 'lucide-react';
 import { QuestionPaper } from '../../types';
 
@@ -52,7 +52,7 @@ export const AnswerKeysList: React.FC = () => {
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                 <a
-                  href={`/api/v1/papers/${p.id}/pdf/answers`}
+                  href={getApiUrl(`/papers/${p.id}/pdf/answers`)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition"
