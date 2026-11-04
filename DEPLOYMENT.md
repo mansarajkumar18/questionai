@@ -50,3 +50,4 @@ Because Q-GEN AI features a persistent SQLite/PostgreSQL database via Prisma, fi
 1. Go to [Railway.app](https://railway.app) > **New Project** > **Deploy from GitHub repo**.
 2. Select `server` folder as root.
 3. Railway automatically detects Node, installs packages, runs Prisma migrations, and assigns an HTTPS URL.
+
