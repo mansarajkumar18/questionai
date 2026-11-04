@@ -1,0 +1,233 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String             @id @default(uuid())
+  email         String             @unique
+  passwordHash  String
+  name          String
+  role          String             @default("TEACHER") // ADMIN, TEACHER
+  institutionId String?
+  institution   Institution?       @relation(fields: [institutionId], references: [id])
+  syllabusDocs  SyllabusDocument[]
+  examTemplates ExamTemplate[]
+  questionPapers QuestionPaper[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model Institution {
+  id               String   @id @default(uuid())
+  name             String
+  logoUrl          String?
+  address          String?
+  contactEmail     String?
+  examHeaderConfig String?  // JSON string for header presets
+  users            User[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Board {
+  id                  String         @id @default(uuid())
+  name                String         @unique
+  code                String         @unique // CBSE, STATE_TN, ICSE, ENGINEERING, NEET, JEE, UPSC, etc.
+  category            String         // SCHOOL, COLLEGE, COMPETITIVE
+  description         String?
+  defaultPatternsJson String?        // JSON string storing standard patterns
+  subjects            Subject[]
+  examTemplates       ExamTemplate[]
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model Subject {
+  id                 String             @id @default(uuid())
+  name               String
+  code               String?
+  boardId            String
+  board              Board              @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  standardOrSemester String             // e.g. "Grade 10", "Semester 4", "Higher Secondary +2"
+  syllabusDocs       SyllabusDocument[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+model SyllabusDocument {
+  id               String          @id @default(uuid())
+  title            String
+  originalFileName String
+  fileType         String          // pdf, jpg, png, etc.
+  fileSize         Int
+  storagePath      String
+  extractedRawText String          // full raw text extracted via PDF parser or OCR
+  ocrConfidence    Float?          // 0-100% confidence estimate
+  status           String          @default("EXTRACTED") // PENDING, EXTRACTED, ANALYZED, FAILED
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId        String?
+  subject          Subject?        @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  units            SyllabusUnit[]
+  questionPapers   QuestionPaper[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model SyllabusUnit {
+  id                 String          @id @default(uuid())
+  unitNumber         Int
+  title              String
+  description        String?
+  weightagePercent   Float?          @default(0.0)
+  syllabusDocumentId String
+  syllabusDocument   SyllabusDocument @relation(fields: [syllabusDocumentId], references: [id], onDelete: Cascade)
+  topics             SyllabusTopic[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+model SyllabusTopic {
+  id               String       @id @default(uuid())
+  topicName        String
+  subtopicsJson    String?      // JSON array of strings
+  keyConceptsJson  String?      // JSON array of strings
+  bloomLevelsJson  String?      // JSON array e.g. ["Remember", "Understand", "Apply"]
+  importanceScore  Int?         @default(3) // 1-5 scale
+  unitId           String
+  unit             SyllabusUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model ExamTemplate {
+  id                 String   @id @default(uuid())
+  name               String
+  boardId            String?
+  board              Board?   @relation(fields: [boardId], references: [id], onDelete: SetNull)
+  standardOrSemester String?
+  totalMarks         Int
+  durationMinutes    Int
+  sectionsJson       String   // JSON string defining sections, mark per question, count, choices
+  rulesJson          String?  // JSON string for internal choices and instructions
+  isSystemDefault    Boolean  @default(false)
+  userId             String?
+  user               User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model QuestionPaper {
+  id                     String                 @id @default(uuid())
+  title                  String
+  institutionName        String
+  institutionLogo        String?
+  examName               String
+  subjectName            String
+  boardName              String
+  standardOrSemester     String
+  academicYear           String
+  examDate               String?
+  durationMinutes        Int
+  totalMarks             Int
+  difficultyDistribution String                 // JSON string e.g. {"basic": 30, "medium": 40, "hard": 30}
+  patternConfigJson      String                 // JSON string of all sections & mark distribution
+  instructionsText       String?                // General instructions for students
+  status                 String                 @default("DRAFT") // DRAFT, GENERATED, AUDITED, FINALIZED
+  userId                 String
+  user                   User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  syllabusDocId          String?
+  syllabusDoc            SyllabusDocument?      @relation(fields: [syllabusDocId], references: [id], onDelete: SetNull)
+  questions              Question[]
+  answerKey              AnswerKey?
+  sharedLinks            SharedLink[]
+  auditReport            AuditValidationReport?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+}
+
+model Question {
+  id             String        @id @default(uuid())
+  paperId        String
+  paper          QuestionPaper @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  sectionName    String        // Section A, Section B, etc.
+  questionNumber Int
+  questionText   String
+  questionType   String        // MCQ, FILL_BLANK, TRUE_FALSE, MATCH, SHORT_ANSWER, LONG_ANSWER, ESSAY, NUMERICAL, APPLICATION
+  marks          Int
+  difficulty     String        // BASIC, MEDIUM, HARD
+  unitTag        String?       // Unit / Chapter reference
+  topicTag       String?       // Specific topic reference
+  optionsJson    String?       // JSON array for MCQ options or match column pairs
+  bloomLevel     String?       // REMEMBER, UNDERSTAND, APPLY, ANALYZE, EVALUATE, CREATE
+  syllabusRef    String?       // Exact excerpt or citation from syllabus
+  orderIndex     Int           @default(0)
+  answer         AnswerKeyItem?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model AnswerKey {
+  id         String          @id @default(uuid())
+  paperId    String          @unique
+  paper      QuestionPaper   @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  items      AnswerKeyItem[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+}
+
+model AnswerKeyItem {
+  id                           String     @id @default(uuid())
+  answerKeyId                  String
+  answerKey                    AnswerKey  @relation(fields: [answerKeyId], references: [id], onDelete: Cascade)
+  questionId                   String     @unique
+  question                     Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  solutionText                 String     // Full descriptive answer or correct option
+  stepByStepMarksJson          String?    // JSON array of { step: string, marks: number }
+  rationaleExplanation         String?    // Why this answer is correct (MCQs / problem reasoning)
+  keyPointsJson                String?    // JSON array of essential points required for full marks
+  alternativeAcceptableAnswers String?    // JSON array of valid alternative approaches
+  createdAt                    DateTime   @default(now())
+  updatedAt                    DateTime   @updatedAt
+}
+
+model SharedLink {
+  id                 String        @id @default(uuid())
+  shareToken         String        @unique @default(uuid())
+  paperId            String
+  paper              QuestionPaper @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  includeAnswerKey   Boolean       @default(false)
+  allowDownload      Boolean       @default(true)
+  expiresAt          DateTime?
+  accessPasscodeHash String?       // optional PIN/passcode to view
+  viewCount          Int           @default(0)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+model AuditValidationReport {
+  id                     String        @id @default(uuid())
+  paperId                String        @unique
+  paper                  QuestionPaper @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  overallScore           Int           // 0-100 score
+  syllabusAdherenceScore Int           // 0-100
+  markSanityPassed       Boolean       @default(true)
+  difficultyBalanceScore Int           // 0-100
+  feedbackJson           String        // JSON object containing 10-point audit observations
+  flaggedQuestionsJson   String?       // JSON array of flagged question IDs with reasons
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

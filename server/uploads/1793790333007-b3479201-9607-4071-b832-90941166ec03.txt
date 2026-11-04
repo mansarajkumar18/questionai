@@ -1,0 +1,26 @@
+
+COURSE SYLLABUS: APPLIED THERMODYNAMICS & FLUID MECHANICS
+Standard: B.Tech Mechanical Engineering / Semester IV
+Course Code: ME402
+
+UNIT I: FIRST LAW OF THERMODYNAMICS AND ENERGY EQUATIONS
+- Closed and open systems, thermodynamic equilibrium, Zeroth Law of Thermodynamics.
+- Work and heat transfers, First Law applied to flow and non-flow processes.
+- Steady Flow Energy Equation (SFEE), application to nozzles, turbines, compressors, and heat exchangers.
+Key Concepts: Internal energy, Enthalpy, P-V diagrams, SFEE equations.
+
+UNIT II: SECOND LAW OF THERMODYNAMICS AND ENTROPY
+- Heat engines, refrigerators, and heat pumps. Kelvin-Planck and Clausius statements.
+- Carnot cycle, Carnot theorem, reversible and irreversible processes.
+- Clausius inequality, definition and calculation of entropy, principle of increase of entropy.
+Key Concepts: Carnot efficiency, T-S diagrams, Entropy generation, Availability.
+
+UNIT III: PROPERTIES OF PURE SUBSTANCES AND STEAM POWER CYCLES
+- P-V, P-T, and T-S diagrams for pure substances, Mollier diagram.
+- Rankine cycle, methods to improve cycle efficiency: Reheat and Regeneration.
+Key Concepts: Dryness fraction, Superheated steam, Rankine cycle efficiency.
+
+UNIT IV: GAS POWER CYCLES AND INTERNAL COMBUSTION ENGINES
+- Otto, Diesel, and Dual combustion air-standard cycles.
+- Comparison of efficiencies, Mean Effective Pressure (MEP).
+Key Concepts: Compression ratio, Air standard efficiency, P-V and T-S analysis.
