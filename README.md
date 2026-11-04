@@ -93,12 +93,7 @@ npm run dev
 ```
 The frontend starts on `http://localhost:5173`.
 
-### 4. Default Demo Accounts
-For instant local or testing access:
-- **Teacher Account:** `teacher@qgenai.edu` / `SecurePassword123!`
-- **Administrator Account:** `admin@qgenai.edu` / `AdminPassword123!`
-
-### 5. Configuring Google Gemini API Key
+### 4. Configuring Google Gemini API Key
 You can configure your Google Gemini API key in two ways:
 1. **In-App (Recommended):** Log in, navigate to **Settings**, paste your Gemini API Key in the AI Engine Provider card, select your preferred model (`gemini-2.5-flash`), and click **Test AI Connection**.
 2. **Via `.env`:** Add `GEMINI_API_KEY="your_api_key_here"` in `server/.env`.
