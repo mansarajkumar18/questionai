@@ -88,3 +88,4 @@ cd client
 npm run dev
 # Frontend starts on http://localhost:5173
 ```
+

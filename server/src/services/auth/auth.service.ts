@@ -22,3 +22,4 @@ export class AuthService {
     return jwt.verify(token, JWT_SECRET);
   }
 }
+

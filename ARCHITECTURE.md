@@ -61,3 +61,4 @@
   $$\sum (\text{questions} \times \text{marksPerQuestion}) = \text{totalMarks}$$
 - Disallows question generation when section marks do not equal examination total marks.
 - Difficulty modes enforce a strict 100% total distribution across Basic, Medium, and Hard categories.
+
