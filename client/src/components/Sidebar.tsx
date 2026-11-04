@@ -23,7 +23,6 @@ const navItems = [
   { name: 'Answer Keys', path: '/answers', icon: KeyRound },
   { name: 'Shared Documents', path: '/shared-docs', icon: Share2 },
   { name: 'Settings', path: '/settings', icon: Settings },
-  { name: 'User Profile', path: '/profile', icon: User },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -88,3 +87,4 @@ export const Sidebar: React.FC = () => {
     </aside>
   );
 };
+

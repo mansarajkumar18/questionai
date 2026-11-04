@@ -144,3 +144,4 @@ export const SyllabusLibrary: React.FC = () => {
     </div>
   );
 };
+
