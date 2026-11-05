@@ -37,6 +37,60 @@ const standardBoards = [
     ])
   },
   {
+    name: 'ICSE / ISC (Council for the Indian School Certificate Examinations)',
+    code: 'ICSE',
+    category: 'SCHOOL',
+    description: 'National examination board conducting ICSE (Class 10) and ISC (Class 12).',
+    defaultPatternsJson: JSON.stringify([
+      {
+        name: 'ICSE Standard 80 Marks Blueprint',
+        totalMarks: 80,
+        durationMinutes: 120,
+        sections: [
+          { sectionName: 'Section A', sectionTitle: 'Compulsory Objective & Short Questions', questionType: 'MCQ', count: 16, marksPerQ: 1 },
+          { sectionName: 'Section B', sectionTitle: 'Structured Short & Long Questions (Answer 4 out of 6)', questionType: 'SHORT_ANSWER', count: 4, marksPerQ: 16 }
+        ]
+      }
+    ])
+  },
+  {
+    name: 'State Board of Education (General / Multi-State)',
+    code: 'STATE_BOARD',
+    category: 'SCHOOL',
+    description: 'Standard Secondary & Higher Secondary state educational pattern.',
+    defaultPatternsJson: JSON.stringify([
+      {
+        name: 'State Board Standard 100 Marks Pattern',
+        totalMarks: 100,
+        durationMinutes: 180,
+        sections: [
+          { sectionName: 'Part A', sectionTitle: 'Objective / Multiple Choice Questions', questionType: 'MCQ', count: 20, marksPerQ: 1 },
+          { sectionName: 'Part B', sectionTitle: 'Short Answer Questions', questionType: 'SHORT_ANSWER', count: 10, marksPerQ: 3 },
+          { sectionName: 'Part C', sectionTitle: 'Descriptive & Long Answer Questions', questionType: 'LONG_ANSWER', count: 5, marksPerQ: 10 }
+        ]
+      }
+    ])
+  },
+  {
+    name: 'Matriculation Board of Education',
+    code: 'MATRICULATION',
+    category: 'SCHOOL',
+    description: 'Standard Matriculation curriculum and secondary school board pattern.',
+    defaultPatternsJson: JSON.stringify([
+      {
+        name: 'Matriculation 100 Marks Pattern',
+        totalMarks: 100,
+        durationMinutes: 180,
+        sections: [
+          { sectionName: 'Section I', sectionTitle: 'One Mark Questions', questionType: 'MCQ', count: 20, marksPerQ: 1 },
+          { sectionName: 'Section II', sectionTitle: 'Two Mark Short Questions', questionType: 'SHORT_ANSWER', count: 10, marksPerQ: 2 },
+          { sectionName: 'Section III', sectionTitle: 'Five Mark Detailed Questions', questionType: 'LONG_ANSWER', count: 8, marksPerQ: 5 },
+          { sectionName: 'Section IV', sectionTitle: 'Ten Mark Essay / Problem', questionType: 'ESSAY', count: 2, marksPerQ: 10 }
+        ]
+      }
+    ])
+  },
+  {
     name: 'Tamil Nadu State Board',
     code: 'STATE_TN',
     category: 'SCHOOL',
@@ -80,6 +134,24 @@ const standardBoards = [
           { sectionName: 'Part A', sectionTitle: 'Short Answer Questions (10 x 2 Marks)', questionType: 'SHORT_ANSWER', count: 10, marksPerQ: 2 },
           { sectionName: 'Part B', sectionTitle: 'Analytical / Long Answer (5 x 13 Marks - Either/Or)', questionType: 'LONG_ANSWER', count: 5, marksPerQ: 13 },
           { sectionName: 'Part C', sectionTitle: 'Application / Design / Case Study (1 x 15 Marks)', questionType: 'APPLICATION', count: 1, marksPerQ: 15 }
+        ]
+      }
+    ])
+  },
+  {
+    name: 'Autonomous College / Deemed University (Semester Pattern)',
+    code: 'AUTONOMOUS_UNIV',
+    category: 'COLLEGE',
+    description: 'Autonomous Institutions & Deemed Universities End-Semester pattern.',
+    defaultPatternsJson: JSON.stringify([
+      {
+        name: 'Autonomous 100 Marks End-Semester Blueprint',
+        totalMarks: 100,
+        durationMinutes: 180,
+        sections: [
+          { sectionName: 'Part A', sectionTitle: 'Short Answer Questions (10 x 2 Marks)', questionType: 'SHORT_ANSWER', count: 10, marksPerQ: 2 },
+          { sectionName: 'Part B', sectionTitle: 'Analytical / Core Questions (5 x 13 Marks)', questionType: 'LONG_ANSWER', count: 5, marksPerQ: 13 },
+          { sectionName: 'Part C', sectionTitle: 'Application / Case Study (1 x 15 Marks)', questionType: 'APPLICATION', count: 1, marksPerQ: 15 }
         ]
       }
     ])

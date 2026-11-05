@@ -16,6 +16,7 @@ import {
   Clock,
   Layers,
   HelpCircle,
+  Loader2,
 } from 'lucide-react';
 import { ExamSectionConfig, DifficultyConfig, Board, SyllabusDocument, SyllabusUnit } from '../../types';
 
@@ -33,6 +34,8 @@ export const CreateWizard: React.FC = () => {
   const [medium, setMedium] = useState('English');
   const [instructions, setInstructions] = useState('');
   const [boards, setBoards] = useState<Board[]>([]);
+  const [boardsLoading, setBoardsLoading] = useState<boolean>(true);
+  const [boardsError, setBoardsError] = useState<string>('');
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -105,21 +108,50 @@ export const CreateWizard: React.FC = () => {
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState('');
 
-  // Load Boards on mount
-  useEffect(() => {
-    api.get('/boards').then((res) => {
-      if (res.data.success && res.data.boards.length > 0) {
+  // Load Boards from backend API with retry & error handling
+  const fetchBoards = async () => {
+    setBoardsLoading(true);
+    setBoardsError('');
+    try {
+      const res = await api.get('/boards');
+      if (res.data?.success && Array.isArray(res.data.boards) && res.data.boards.length > 0) {
         setBoards(res.data.boards);
-        setBoardId(res.data.boards[0].id);
-        setSelectedBoardName(res.data.boards[0].name);
+        setBoardId((currentId) => {
+          // If already selected and valid in the list, keep it
+          if (currentId && res.data.boards.some((b: any) => b.id === currentId)) {
+            return currentId;
+          }
+          const defaultBoard = res.data.boards[0];
+          setSelectedBoardName(defaultBoard.name);
+          return defaultBoard.id;
+        });
+      } else {
+        setBoardsError('No educational boards returned from backend server.');
       }
-    });
+    } catch (err: any) {
+      console.error('Failed to load educational boards:', err);
+      const msg =
+        err.response?.data?.message ||
+        (err.response?.status === 404
+          ? 'API endpoint /api/v1/boards not found (404). Please ensure backend is running.'
+          : 'Unable to connect to backend API server.');
+      setBoardsError(msg);
+    } finally {
+      setBoardsLoading(false);
+    }
+  };
 
-    api.get('/auth/me').then((res) => {
-      if (res.data.user?.institution?.name) {
-        setInstitutionName(res.data.user.institution.name);
-      }
-    });
+  useEffect(() => {
+    fetchBoards();
+
+    api
+      .get('/auth/me')
+      .then((res) => {
+        if (res.data?.user?.institution?.name) {
+          setInstitutionName(res.data.user.institution.name);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Recalculate section marks
@@ -223,10 +255,11 @@ export const CreateWizard: React.FC = () => {
   const handleAnalyzeSyllabus = async () => {
     if (!extractedDoc) return;
     setAnalyzingSyllabus(true);
+    const effectiveBoard = selectedBoardName || boards.find((b) => b.id === boardId)?.name || 'CBSE';
     try {
       const res = await api.post(`/syllabus/${extractedDoc.id}/analyze`, {
         subjectName,
-        boardName: selectedBoardName,
+        boardName: effectiveBoard,
         standardOrSemester,
         instructions,
       });
@@ -248,6 +281,8 @@ export const CreateWizard: React.FC = () => {
     setGenerating(true);
     setGenerationError('');
 
+    const effectiveBoard = selectedBoardName || boards.find((b) => b.id === boardId)?.name || 'CBSE';
+
     try {
       // 1. Create Paper Record
       const createRes = await api.post('/papers', {
@@ -255,7 +290,7 @@ export const CreateWizard: React.FC = () => {
         institutionName,
         examName,
         subjectName,
-        boardName: selectedBoardName,
+        boardName: effectiveBoard,
         standardOrSemester,
         academicYear,
         durationMinutes,
@@ -374,24 +409,75 @@ export const CreateWizard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Educational Board / Category *
-                </label>
-                <select
-                  value={boardId}
-                  onChange={(e) => {
-                    setBoardId(e.target.value);
-                    const b = boards.find((item) => item.id === e.target.value);
-                    if (b) setSelectedBoardName(b.name);
-                  }}
-                  className="block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                >
-                  {boards.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name} ({b.category})
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Educational Board / Category *
+                  </label>
+                  {boardsLoading && (
+                    <span className="text-[11px] text-brand-600 flex items-center gap-1 font-medium">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Loading boards...
+                    </span>
+                  )}
+                </div>
+
+                {boardsError ? (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center justify-between">
+                    <span className="font-medium">{boardsError}</span>
+                    <button
+                      type="button"
+                      onClick={fetchBoards}
+                      className="px-2.5 py-1 bg-rose-600 text-white rounded-lg font-medium hover:bg-rose-700 text-xs transition"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    value={boardId}
+                    disabled={boardsLoading}
+                    onChange={(e) => {
+                      const newId = e.target.value;
+                      setBoardId(newId);
+                      const b = boards.find((item) => item.id === newId);
+                      if (b) setSelectedBoardName(b.name);
+                    }}
+                    className="block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm disabled:opacity-60 transition"
+                  >
+                    {boards.length === 0 ? (
+                      <option value="">{boardsLoading ? 'Loading boards...' : 'No educational boards available'}</option>
+                    ) : (
+                      <>
+                        <optgroup label="School Education (CBSE, ICSE, State Boards)">
+                          {boards
+                            .filter((b) => b.category === 'SCHOOL')
+                            .map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.name}
+                              </option>
+                            ))}
+                        </optgroup>
+                        <optgroup label="Higher Education & Universities">
+                          {boards
+                            .filter((b) => b.category === 'COLLEGE')
+                            .map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.name}
+                              </option>
+                            ))}
+                        </optgroup>
+                        <optgroup label="Competitive Entrance Examinations">
+                          {boards
+                            .filter((b) => b.category === 'COMPETITIVE')
+                            .map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.name}
+                              </option>
+                            ))}
+                        </optgroup>
+                      </>
+                    )}
+                  </select>
+                )}
               </div>
 
               <div>

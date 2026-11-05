@@ -23,6 +23,7 @@ export interface Board {
   category: 'SCHOOL' | 'COLLEGE' | 'COMPETITIVE';
   description?: string;
   defaultPatternsJson?: string;
+  defaultPatterns?: any[];
 }
 
 export interface SyllabusUnit {
