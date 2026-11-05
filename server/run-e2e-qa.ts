@@ -162,8 +162,8 @@ UNIT 3: Fundamentals of Artificial Intelligence
     console.log('Answer Key Status:', ansRes.status, 'in', durationSec, 'seconds');
     console.log('Answer Items Count:', count);
     if (ansData.answerKey?.items?.[0]) {
-      console.log('Sample Answer 1:', ansData.answerKey.items[0].modelAnswer);
-      console.log('Marking Breakdown:', ansData.answerKey.items[0].markingBreakdown);
+      console.log('Sample Answer 1:', ansData.answerKey.items[0].solutionText);
+      console.log('Marking Breakdown:', ansData.answerKey.items[0].stepByStepMarksJson);
     }
     report.answerKey = { pass: ansRes.status === 200 && count > 0, itemsCount: count, durationSec };
   } catch (err: any) {

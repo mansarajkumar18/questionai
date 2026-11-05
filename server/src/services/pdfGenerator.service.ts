@@ -21,7 +21,8 @@ export class PDFGeneratorService {
 
     const doc = new PDFDocument({
       size: 'A4',
-      margins: { top: 40, bottom: 40, left: 45, right: 45 },
+      margins: { top: 40, bottom: 45, left: 45, right: 45 },
+      bufferPages: true,
       info: {
         Title: `${paper.title} - Question Paper`,
         Author: paper.institutionName,
@@ -127,7 +128,7 @@ export class PDFGeneratorService {
     });
 
     sectionsMap.forEach((questions, sectionName) => {
-      // Check if page needs break
+      // Check if section header needs a new page
       if (doc.y > 680) doc.addPage();
 
       doc
@@ -139,7 +140,7 @@ export class PDFGeneratorService {
       doc.moveDown(0.4);
 
       questions.forEach((q) => {
-        if (doc.y > 720) doc.addPage();
+        if (doc.y > 690) doc.addPage();
 
         const qStartY = doc.y;
 
@@ -148,7 +149,7 @@ export class PDFGeneratorService {
           .fontSize(8.5)
           .font('Helvetica-Bold')
           .fillColor('#334155')
-          .text(`[${q.marks} Mark${q.marks > 1 ? 's' : ''}]`, 500, qStartY, { align: 'right' });
+          .text(`[${q.marks} Mark${q.marks > 1 ? 's' : ''}]`, 495, qStartY, { width: 55, align: 'right' });
 
         // Question text
         doc
@@ -157,7 +158,7 @@ export class PDFGeneratorService {
           .fillColor('#0f172a')
           .text(`${q.questionNumber}. `, 45, qStartY, { continued: true })
           .font('Helvetica')
-          .text(q.questionText, { width: 445, lineGap: 2 });
+          .text(q.questionText, { width: 440, lineGap: 2 });
 
         // MCQ options
         if (q.optionsJson) {
@@ -188,6 +189,35 @@ export class PDFGeneratorService {
       .fillColor('#64748b')
       .text('*** END OF QUESTION PAPER ***', { align: 'center' });
 
+    // Page Numbering and Running Header across all buffered pages
+    const range = doc.bufferedPageRange();
+    for (let i = range.start; i < range.start + range.count; i++) {
+      doc.switchToPage(i);
+
+      // Running header on page 2+
+      if (i > range.start) {
+        doc
+          .fontSize(7.5)
+          .font('Helvetica-Oblique')
+          .fillColor('#64748b')
+          .text(`${paper.examName} — ${paper.subjectName}`, 45, 20, { width: 505, align: 'left' });
+        doc
+          .fontSize(7.5)
+          .font('Helvetica')
+          .fillColor('#94a3b8')
+          .text(`${paper.boardName}`, 45, 20, { width: 505, align: 'right' });
+        doc.strokeColor('#e2e8f0').lineWidth(0.5).moveTo(45, 30).lineTo(550, 30).stroke();
+      }
+
+      // Running footer on all pages
+      doc.strokeColor('#e2e8f0').lineWidth(0.5).moveTo(45, doc.page.height - 32).lineTo(550, doc.page.height - 32).stroke();
+      doc
+        .fontSize(8)
+        .font('Helvetica')
+        .fillColor('#64748b')
+        .text(`Page ${i + 1} of ${range.count}`, 45, doc.page.height - 24, { width: 505, align: 'center' });
+    }
+
     doc.end();
     return doc;
   }
@@ -214,7 +244,8 @@ export class PDFGeneratorService {
 
     const doc = new PDFDocument({
       size: 'A4',
-      margins: { top: 40, bottom: 40, left: 45, right: 45 },
+      margins: { top: 40, bottom: 45, left: 45, right: 45 },
+      bufferPages: true,
       info: {
         Title: `${paper.title} - Answer Key & Marking Scheme`,
         Author: paper.institutionName,
@@ -247,18 +278,22 @@ export class PDFGeneratorService {
     doc.moveDown(0.8);
 
     paper.questions.forEach((q) => {
-      if (doc.y > 690) doc.addPage();
+      if (doc.y > 680) doc.addPage();
 
       const ans = q.answer;
 
-      // Question Number & Text
+      // Question Number & Text - Display full text with no artificial truncation
       doc
         .fontSize(10)
         .font('Helvetica-Bold')
         .fillColor('#0f172a')
-        .text(`Q${q.questionNumber} (${q.sectionName} - ${q.marks} Marks): `, { continued: true })
+        .text(`Q${q.questionNumber} (${q.sectionName} - [${q.marks} Mark${q.marks > 1 ? 's' : ''}]): `);
+
+      doc
+        .fontSize(9)
         .font('Helvetica-Oblique')
-        .text(q.questionText.slice(0, 140) + (q.questionText.length > 140 ? '...' : ''));
+        .fillColor('#334155')
+        .text(q.questionText, { width: 505, lineGap: 1.5 });
 
       doc.moveDown(0.3);
 
@@ -274,7 +309,7 @@ export class PDFGeneratorService {
         .font('Helvetica')
         .fillColor('#1e293b')
         .text(ans?.solutionText || 'Solution pending teacher entry.', {
-          width: 490,
+          width: 505,
           lineGap: 2,
         });
 
@@ -290,7 +325,7 @@ export class PDFGeneratorService {
                 .fontSize(8.5)
                 .font('Helvetica')
                 .fillColor('#334155')
-                .text(`  • ${s.step}: [${s.marks} Mark${s.marks > 1 ? 's' : ''}]`);
+                .text(`  • ${s.step}: [${s.marks} Mark${s.marks > 1 ? 's' : ''}]`, { width: 505 });
             });
           }
         } catch {}
@@ -304,7 +339,7 @@ export class PDFGeneratorService {
           .fontSize(8.5)
           .font('Helvetica')
           .fillColor('#475569')
-          .text(ans.rationaleExplanation, { width: 490, lineGap: 1.5 });
+          .text(ans.rationaleExplanation, { width: 505, lineGap: 1.5 });
       }
 
       doc.moveDown(0.6);
@@ -319,8 +354,36 @@ export class PDFGeneratorService {
       .fillColor('#64748b')
       .text('*** END OF ANSWER KEY & MARKING SCHEME ***', { align: 'center' });
 
+    // Page Numbering and Running Header across all buffered pages
+    const range = doc.bufferedPageRange();
+    for (let i = range.start; i < range.start + range.count; i++) {
+      doc.switchToPage(i);
+
+      // Running header on page 2+
+      if (i > range.start) {
+        doc
+          .fontSize(7.5)
+          .font('Helvetica-Bold')
+          .fillColor('#b91c1c')
+          .text('ANSWER KEY & MARKING SCHEME (CONFIDENTIAL)', 45, 20, { width: 505, align: 'left' });
+        doc
+          .fontSize(7.5)
+          .font('Helvetica')
+          .fillColor('#94a3b8')
+          .text(`${paper.examName} — ${paper.subjectName}`, 45, 20, { width: 505, align: 'right' });
+        doc.strokeColor('#e2e8f0').lineWidth(0.5).moveTo(45, 30).lineTo(550, 30).stroke();
+      }
+
+      // Running footer on all pages
+      doc.strokeColor('#e2e8f0').lineWidth(0.5).moveTo(45, doc.page.height - 32).lineTo(550, doc.page.height - 32).stroke();
+      doc
+        .fontSize(8)
+        .font('Helvetica')
+        .fillColor('#64748b')
+        .text(`Page ${i + 1} of ${range.count}`, 45, doc.page.height - 24, { width: 505, align: 'center' });
+    }
+
     doc.end();
     return doc;
   }
 }
-
