@@ -27,7 +27,12 @@ export class AIProviderService {
     } catch {
       // ignore
     }
-    return process.env.GEMINI_MODEL?.trim() || 'gemini-1.5-flash';
+    return process.env.GEMINI_MODEL?.trim() || 'gemini-3.5-flash-lite';
+  }
+
+  private static getFallbackModels(preferred: string): string[] {
+    const list = [preferred, 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-flash-latest'];
+    return Array.from(new Set(list));
   }
 
   public static async testConnection(customApiKey?: string): Promise<{ success: boolean; latencyMs: number; message: string; model: string }> {
@@ -41,39 +46,38 @@ export class AIProviderService {
       };
     }
 
-    const modelName = await this.getEffectiveModel();
+    const preferredModel = await this.getEffectiveModel();
+    const modelsToTry = this.getFallbackModels(preferredModel);
     const startTime = Date.now();
+    let lastError: any = null;
 
-    try {
-      const genAI = new GoogleGenerativeAI(key);
-      const model = genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent('Respond with only the single word: "READY"');
-      const text = result.response.text().trim();
-      const latencyMs = Date.now() - startTime;
+    const genAI = new GoogleGenerativeAI(key);
 
-      if (text.includes('READY')) {
+    for (const modelName of modelsToTry) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent('Respond with only the single word: "READY"');
+        const text = result.response.text().trim();
+        const latencyMs = Date.now() - startTime;
+
         return {
           success: true,
           latencyMs,
           message: 'Connected successfully to Google Gemini API.',
           model: modelName,
         };
-      } else {
-        return {
-          success: true,
-          latencyMs,
-          message: `Connected, response: "${text.substring(0, 50)}"`,
-          model: modelName,
-        };
+      } catch (error: any) {
+        lastError = error;
+        // Continue to fallback model if 503 or 404
       }
-    } catch (error: any) {
-      return {
-        success: false,
-        latencyMs: Date.now() - startTime,
-        message: error.message || 'Failed to authenticate with Gemini API.',
-        model: modelName,
-      };
     }
+
+    return {
+      success: false,
+      latencyMs: Date.now() - startTime,
+      message: lastError?.message || 'Failed to authenticate with Gemini API.',
+      model: preferredModel,
+    };
   }
 
   public static async generateStructuredJson<T>(
@@ -87,33 +91,40 @@ export class AIProviderService {
       );
     }
 
-    const modelName = await this.getEffectiveModel();
+    const preferredModel = await this.getEffectiveModel();
+    const modelsToTry = this.getFallbackModels(preferredModel);
     const genAI = new GoogleGenerativeAI(key);
 
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-      systemInstruction: systemInstruction || 'You are an expert academic curriculum analyst and examination question paper architect. Always output strictly valid JSON with no conversational text or markdown code fences.',
-      generationConfig: {
-        responseMimeType: 'application/json',
-        temperature: 0.2,
-      },
-    });
+    let lastError: any = null;
+    for (const modelName of modelsToTry) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction:
+            systemInstruction ||
+            'You are an expert academic curriculum analyst and examination question paper architect. Always output strictly valid JSON with no conversational text or markdown code fences.',
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+          },
+        });
 
-    const result = await model.generateContent(prompt);
-    const rawText = result.response.text().trim();
+        const result = await model.generateContent(prompt);
+        const rawText = result.response.text().trim();
 
-    try {
-      // Remove any extraneous markdown backticks if any model still outputs them
-      const cleaned = rawText
-        .replace(/^```json\s*/i, '')
-        .replace(/^```\s*/i, '')
-        .replace(/\s*```$/i, '')
-        .trim();
-      return JSON.parse(cleaned) as T;
-    } catch (parseErr) {
-      console.error('Failed to parse AI JSON response:', rawText);
-      throw new Error('AI returned an invalid JSON response structure. Please retry generation.');
+        const cleaned = rawText
+          .replace(/^```json\s*/i, '')
+          .replace(/^```\s*/i, '')
+          .replace(/\s*```$/i, '')
+          .trim();
+        return JSON.parse(cleaned) as T;
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`[AI] Model ${modelName} encountered error, trying fallback model...`);
+      }
     }
+
+    throw lastError || new Error('AI returned an invalid response structure. Please retry generation.');
   }
 
   public static async generateText(prompt: string, systemInstruction?: string): Promise<string> {
@@ -124,16 +135,27 @@ export class AIProviderService {
       );
     }
 
-    const modelName = await this.getEffectiveModel();
+    const preferredModel = await this.getEffectiveModel();
+    const modelsToTry = this.getFallbackModels(preferredModel);
     const genAI = new GoogleGenerativeAI(key);
 
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-      systemInstruction,
-    });
+    let lastError: any = null;
+    for (const modelName of modelsToTry) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction,
+        });
 
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`[AI Text] Model ${modelName} encountered error, trying fallback model...`);
+      }
+    }
+
+    throw lastError || new Error('All AI models failed to generate text.');
   }
 }
 

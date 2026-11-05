@@ -255,8 +255,8 @@ router.post('/:id/audit', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-// Download PDF 1: Question Paper
-router.get('/:id/pdf/questions', async (req: Request, res: Response) => {
+// Download PDF 1: Question Paper (supports both /:id/pdf and /:id/pdf/questions)
+router.get(['/:id/pdf', '/:id/pdf/questions'], async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const doc = await PDFGeneratorService.generateQuestionPaperPdf(id);
