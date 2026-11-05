@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Sparkles, Building2, User } from 'lucide-react';
+import { Sparkles, Building2, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 
 export const Navbar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -48,26 +48,22 @@ export const Navbar: React.FC = () => {
           <span>{aiConfigured ? 'Gemini AI Active' : 'Configure Gemini Key'}</span>
         </Link>
 
-        {/* User Info & Logout */}
-        <div className="flex items-center gap-3 pl-2 border-l border-slate-200">
+        {/* User Workspace Info */}
+        <Link
+          to="/profile"
+          className="flex items-center gap-3 pl-2 border-l border-slate-200 hover:opacity-80 transition"
+          title="View Educator Profile"
+        >
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-brand-100 border border-brand-200 flex items-center justify-center text-brand-700 font-semibold text-xs">
               {user?.name ? user.name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
             </div>
             <div className="hidden md:block text-left">
-              <p className="text-xs font-semibold text-slate-800 leading-tight">{user?.name}</p>
-              <p className="text-[11px] text-slate-400 leading-tight">{user?.email}</p>
+              <p className="text-xs font-semibold text-slate-800 leading-tight">{user?.name || 'Educator'}</p>
+              <p className="text-[11px] text-slate-400 leading-tight">{user?.email || 'Teacher Workspace'}</p>
             </div>
           </div>
-
-          <button
-            onClick={logout}
-            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-            title="Log out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
+        </Link>
       </div>
     </header>
   );

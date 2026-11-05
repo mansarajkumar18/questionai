@@ -49,34 +49,10 @@ api.interceptors.request.use((config) => {
 // Interceptor for response errors
 api.interceptors.response.use(
   (response) => {
-    // Detect if Vercel or proxy returned HTML (such as index.html) instead of JSON API response
-    if (
-      typeof response.data === 'string' &&
-      (response.data.toLowerCase().includes('<!doctype html>') || response.data.includes('<html'))
-    ) {
-      return Promise.reject({
-        response: {
-          status: 502,
-          data: {
-            success: false,
-            message:
-              'Backend service unreachable. Vercel served HTML instead of the API response. Please configure VITE_API_URL in Vercel to point to your deployed backend (e.g., Render/Railway).',
-          },
-        },
-      });
-    }
     return response;
   },
   (error) => {
-    if (
-      error.response?.status === 401 &&
-      !window.location.pathname.startsWith('/login') &&
-      !window.location.pathname.startsWith('/shared/')
-    ) {
-      localStorage.removeItem('qgen_token');
-      localStorage.removeItem('qgen_user');
-      window.location.href = '/login';
-    }
+    // Non-blocking error handling - no redirect to /login
     return Promise.reject(error);
   }
 );

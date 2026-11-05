@@ -1,9 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import { Layout } from './components/Layout';
-import { Login } from './pages/Auth/Login';
-import { Register } from './pages/Auth/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Settings } from './pages/Settings';
 import { CreateWizard } from './pages/CreatePaper/CreateWizard';
@@ -16,45 +14,12 @@ import { AnswerKeysList } from './pages/AnswerKeys/AnswerKeysList';
 import { SharedManager } from './pages/Shared/SharedManager';
 import { UserProfile } from './pages/Profile/UserProfile';
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white text-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-          <span>Initializing Q-GEN AI...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
-};
-
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/shared/:token" element={<PublicSharedView />} />
-
-        {/* Protected Application Routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
+        {/* Direct Main Application - Open directly without login */}
+        <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="create" element={<CreateWizard />} />
           <Route path="papers/:id" element={<PaperWorkbench />} />
@@ -67,7 +32,14 @@ export default function App() {
           <Route path="profile" element={<UserProfile />} />
         </Route>
 
-        {/* Fallback */}
+        {/* Public Shared Student Link */}
+        <Route path="/shared/:token" element={<PublicSharedView />} />
+
+        {/* Authentication removed - redirect old auth links to direct dashboard */}
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/register" element={<Navigate to="/" replace />} />
+
+        {/* Catch-all Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>

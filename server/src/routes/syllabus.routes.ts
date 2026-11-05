@@ -116,12 +116,10 @@ router.post('/upload', requireAuth, upload.array('files', 10), async (req: Reque
   }
 });
 
-// List all user syllabus documents
+// List all syllabus documents
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
     const documents = await prisma.syllabusDocument.findMany({
-      where: { userId },
       include: {
         units: {
           include: {
@@ -146,10 +144,9 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 router.get('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
 
     const document = await prisma.syllabusDocument.findFirst({
-      where: { id, userId },
+      where: { id },
       include: {
         units: {
           include: {
@@ -175,7 +172,6 @@ router.put('/:id/text', requireAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { extractedRawText } = req.body;
-    const userId = req.user!.id;
 
     if (!extractedRawText || extractedRawText.trim().length === 0) {
       return res.status(400).json({
@@ -185,7 +181,7 @@ router.put('/:id/text', requireAuth, async (req: Request, res: Response) => {
     }
 
     const document = await prisma.syllabusDocument.updateMany({
-      where: { id, userId },
+      where: { id },
       data: {
         extractedRawText: extractedRawText.trim(),
         status: 'EXTRACTED',
@@ -193,7 +189,7 @@ router.put('/:id/text', requireAuth, async (req: Request, res: Response) => {
     });
 
     if (document.count === 0) {
-      return res.status(404).json({ success: false, message: 'Document not found or access denied.' });
+      return res.status(404).json({ success: false, message: 'Document not found.' });
     }
 
     res.json({ success: true, message: 'Syllabus text verified and saved successfully.' });
@@ -206,10 +202,9 @@ router.put('/:id/text', requireAuth, async (req: Request, res: Response) => {
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
 
     const doc = await prisma.syllabusDocument.findFirst({
-      where: { id, userId },
+      where: { id },
     });
 
     if (!doc) {

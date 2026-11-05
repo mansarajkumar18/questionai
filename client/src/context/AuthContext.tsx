@@ -12,103 +12,60 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
 }
 
+const DEFAULT_WORKSPACE_USER: User = {
+  id: 'faculty-educator',
+  email: 'teacher@qgenai.edu',
+  name: 'Faculty Educator',
+  role: 'TEACHER',
+  institution: {
+    id: 'default-inst',
+    name: 'Apex Institute of Science & Technology',
+    address: 'Knowledge Campus, Chennai, Tamil Nadu',
+    contactEmail: 'contact@apex.edu',
+  },
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('qgen_user');
-    return saved ? JSON.parse(saved) : null;
+  const [user, setUser] = useState<User>(() => {
+    try {
+      const saved = localStorage.getItem('qgen_user');
+      return saved ? JSON.parse(saved) : DEFAULT_WORKSPACE_USER;
+    } catch {
+      return DEFAULT_WORKSPACE_USER;
+    }
   });
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('qgen_token'));
-  const [loading, setLoading] = useState<boolean>(true);
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('qgen_token') || 'direct_access_token');
+  const [loading, setLoading] = useState<boolean>(false);
 
   const refreshUser = async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
     try {
       const res = await api.get('/auth/me');
-      if (res.data.success) {
+      if (res.data?.success && res.data?.user) {
         setUser(res.data.user);
         localStorage.setItem('qgen_user', JSON.stringify(res.data.user));
       }
     } catch {
-      logout();
-    } finally {
-      setLoading(false);
+      // Backend not yet connected or offline: maintain default workspace user
     }
   };
 
   useEffect(() => {
     refreshUser();
-  }, [token]);
+  }, []);
 
-  const login = async (email: string, password: string) => {
-    try {
-      const res = await api.post('/auth/login', { email, password });
-      if (res.data?.success) {
-        const { token: newToken, user: newUser } = res.data;
-        setToken(newToken);
-        setUser(newUser);
-        localStorage.setItem('qgen_token', newToken);
-        localStorage.setItem('qgen_user', JSON.stringify(newUser));
-        return { success: true };
-      }
-      return { success: false, message: res.data?.message || 'Login failed.' };
-    } catch (err: any) {
-      console.error('Login error:', err);
-      let message = 'Login failed. Please check your credentials.';
-      if (err.response?.data?.message) {
-        message = err.response.data.message;
-      } else if (err.code === 'ERR_NETWORK' || !err.response) {
-        message = 'Unable to reach backend server. Please ensure the backend is running and VITE_API_URL is configured.';
-      } else if (err.response?.status === 404) {
-        message = 'Authentication API endpoint not found (404). Please ensure the backend is deployed and VITE_API_URL is configured in Vercel.';
-      } else if (err.response?.status === 502 || err.response?.status === 503) {
-        message = 'Backend server is starting up or temporarily unreachable (502/503). Please retry in 20 seconds.';
-      }
-      return {
-        success: false,
-        message,
-      };
-    }
+  const login = async () => {
+    return { success: true };
   };
 
-  const register = async (name: string, email: string, password: string, institutionName?: string) => {
-    try {
-      const res = await api.post('/auth/register', { name, email, password, institutionName });
-      if (res.data?.success) {
-        const { token: newToken, user: newUser } = res.data;
-        setToken(newToken);
-        setUser(newUser);
-        localStorage.setItem('qgen_token', newToken);
-        localStorage.setItem('qgen_user', JSON.stringify(newUser));
-        return { success: true };
-      }
-      return { success: false, message: res.data?.message || 'Registration failed.' };
-    } catch (err: any) {
-      console.error('Registration error:', err);
-      let message = 'Registration failed.';
-      if (err.response?.data?.message) {
-        message = err.response.data.message;
-      } else if (err.code === 'ERR_NETWORK' || !err.response) {
-        message = 'Unable to reach backend server. Please verify VITE_API_URL in Vercel.';
-      } else if (err.response?.status === 404) {
-        message = 'Backend API endpoint not found (404). Please configure VITE_API_URL in Vercel.';
-      }
-      return {
-        success: false,
-        message,
-      };
-    }
+  const register = async () => {
+    return { success: true };
   };
 
   const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('qgen_token');
-    localStorage.removeItem('qgen_user');
+    // In public access mode, reset to default workspace user
+    setUser(DEFAULT_WORKSPACE_USER);
   };
 
   return (

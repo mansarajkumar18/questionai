@@ -74,12 +74,10 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-// List all user's question papers
+// List all question papers
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id;
     const papers = await prisma.questionPaper.findMany({
-      where: { userId },
       include: {
         questions: { select: { id: true } },
         sharedLinks: true,
@@ -101,10 +99,9 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 router.get('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
 
     const paper = await prisma.questionPaper.findFirst({
-      where: { id, userId },
+      where: { id },
       include: {
         questions: {
           include: {
@@ -327,9 +324,8 @@ router.post('/:id/share', requireAuth, async (req: Request, res: Response) => {
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
     await prisma.questionPaper.deleteMany({
-      where: { id, userId },
+      where: { id },
     });
     res.json({ success: true, message: 'Question paper deleted successfully.' });
   } catch (error: any) {
