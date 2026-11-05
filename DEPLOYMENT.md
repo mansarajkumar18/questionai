@@ -12,25 +12,25 @@ Q-GEN AI is a decoupled full-stack application:
 
 ---
 
-## Why Authentication Failed with a 404 on Vercel
+## Why Full-Stack Requires a Decoupled Backend
 
 If you deploy **only** the frontend to Vercel without deploying the backend or without setting `VITE_API_URL`:
 1. Vercel only serves static HTML/JS/CSS files from `client/dist`.
-2. The browser makes requests to `https://your-vercel-domain.vercel.app/api/v1/auth/login`.
-3. Because Vercel has no Node.js Express server running, Vercel looks for a static file named `/api/v1/auth/login`.
-4. It does not exist, so Vercel returns **HTTP 404 Not Found**.
+2. The browser makes API requests to `/api/v1/*`.
+3. Because Vercel has no persistent Node.js Express server running, Vercel looks for static files and returns **HTTP 404 Not Found**.
+4. Furthermore, AI generation requests (taking ~10-25 seconds) and Tesseract OCR execution exceed Vercel's 10-second serverless execution limits.
 
-**Solution:** Deploy the `server/` directory to Render (takes 2 minutes, free), copy the Render URL, and add `VITE_API_URL` to Vercel.
+**Solution:** Deploy the `server/` directory to Render (persistent Node.js runtime), copy the Render URL, and configure `VITE_API_URL` in Vercel.
 
 ---
 
-## Step 1: Deploy Backend to Render (2 Minutes)
+## Step 1: Deploy Backend to Render
 
 1. Sign in to [Render.com](https://render.com).
-2. Click **New +** > **Web Service**.
+2. Click **New +** > **Web Service** (or use Blueprint with `render.yaml`).
 3. Connect your GitHub repository: `mansarajkumar18/questionai`.
 4. Fill in the deployment details:
-   - **Name:** `qgen-api` (or any name you prefer)
+   - **Name:** `qgen-api` (or any preferred name)
    - **Region:** Any (e.g. Frankfurt, Singapore, Oregon)
    - **Branch:** `main`
    - **Root Directory:** `server`
@@ -43,19 +43,20 @@ If you deploy **only** the frontend to Vercel without deploying the backend or w
      ```bash
      npm start
      ```
-   - **Instance Type:** `Free`
+   - **Instance Type:** `Free` (or Starter for higher memory)
 5. Under **Environment Variables**, add:
    | Key | Value | Description |
    | :--- | :--- | :--- |
    | `PORT` | `5000` | Port for Express server |
-   | `JWT_SECRET` | `generate_a_random_32_char_secret_string` | Secret key for signing JWT tokens |
+   | `DATABASE_URL` | `file:./dev.db` | SQLite database location |
+   | `JWT_SECRET` | `generate_a_random_32_char_secret_string` | Secret key for signing workspace tokens |
    | `GEMINI_API_KEY` | `your_actual_gemini_api_key` | From [Google AI Studio](https://aistudio.google.com/) |
-   | `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model for AI question generation |
+   | `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Gemini model for AI question generation |
    | `NODE_ENV` | `production` | Production mode |
 6. Click **Create Web Service**.
 7. Once deployed, Render will issue a URL like:
    `https://qgen-api.onrender.com`
-8. Verify it by opening `https://qgen-api.onrender.com/api/health` in your browser. You should see:
+8. Verify it by opening `https://qgen-api.onrender.com/api/v1/health` in your browser. You should see:
    ```json
    { "status": "ok", "service": "Q-GEN AI Backend Engine", "database": "healthy" }
    ```
@@ -64,26 +65,26 @@ If you deploy **only** the frontend to Vercel without deploying the backend or w
 
 ## Step 2: Configure Frontend on Vercel
 
-1. Go to your project on [Vercel Dashboard](https://vercel.com).
-2. Navigate to **Settings** > **Environment Variables**.
-3. Add the following variable:
+1. Go to your project on the [Vercel Dashboard](https://vercel.com).
+2. Ensure Project Settings:
+   - **Framework Preset:** `Vite`
+   - **Root Directory:** `./` (or leave default root)
+   - **Build Command:** `cd client && npm install && npm run build` (handled automatically by `vercel.json`)
+   - **Output Directory:** `client/dist`
+3. Navigate to **Settings** > **Environment Variables**.
+4. Add the following variable:
    - **Key:** `VITE_API_URL`
    - **Value:** `https://qgen-api.onrender.com/api/v1` *(replace with your actual Render URL)*
    - **Environments:** Check `Production`, `Preview`, and `Development`.
-4. Click **Save**.
-5. Go to the **Deployments** tab, click the **...** (three dots) next to the latest deployment, and click **Redeploy** (or push a new commit to GitHub).
-   > *Note: Vite bakes environment variables into the static bundle during the build. Redeploying is required for the new variable to take effect.*
+5. Click **Save**.
+6. Go to the **Deployments** tab, click the **...** (three dots) next to the latest deployment, and click **Redeploy**.
+   > *Note: Vite bakes environment variables into the static bundle during build time. Redeploying is required for the new variable to take effect.*
 
 ---
 
-## Step 3: Log In to Production
+## Step 3: Open Direct Dashboard in Production
 
-Once redeployed, open your Vercel URL (e.g., `https://questionai.vercel.app/login`):
-- **Email / Username:** `manasa@158` (or `manasa@gmail.com`)
-- **Password:** `12345678`
-
-Or log in with the administrator account:
-- **Email:** `admin@qgenai.edu`
-- **Password:** `AdminPassword123!`
-
-The request will reach your Render backend, validate the password against SQLite, and authenticate into the Dashboard!
+Once redeployed, open your Vercel URL (e.g., `https://questionai.vercel.app`):
+- The dashboard opens directly with zero authentication barriers or login redirects.
+- Educational boards (CBSE, ICSE, NEET, etc.) load directly from the Render API.
+- Syllabus uploads (PDF/Image) and AI Question Paper Generation work end-to-end.

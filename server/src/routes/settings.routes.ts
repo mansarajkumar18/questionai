@@ -22,7 +22,7 @@ router.get('/ai', requireAuth, async (req: Request, res: Response) => {
     const rawKey = hasDbKey ? keySetting!.value : (process.env.GEMINI_API_KEY || '');
     const maskedKey = rawKey ? `${rawKey.substring(0, 4)}••••••••••••${rawKey.slice(-4)}` : '';
 
-    const currentModel = modelSetting?.value || process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const currentModel = modelSetting?.value || process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
 
     res.json({
       success: true,
@@ -31,9 +31,10 @@ router.get('/ai', requireAuth, async (req: Request, res: Response) => {
       maskedKey,
       model: currentModel,
       availableModels: [
-        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Recommended - Ultra Fast & Precise)' },
-        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Fast & Structured)' },
-        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Deep Reasoning & Complex Analysis)' },
+        { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash-Lite (Recommended - Ultra Fast & High Throughput)' },
+        { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash-Lite (Fast & Precise Structured JSON)' },
+        { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash (Balanced Reasoning & Depth)' },
+        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Legacy)' },
       ],
     });
   } catch (error: any) {

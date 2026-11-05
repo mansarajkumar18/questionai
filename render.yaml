@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: qgen-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install && npx prisma generate && npx tsx prisma/seed.ts && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
