@@ -7,5 +7,6 @@ uploads/*
 server/uploads/*
 !server/uploads/.gitkeep
 dev.db-journal
+*.traineddata
 .DS_Store
 

@@ -20,6 +20,7 @@ export class PDFGeneratorService {
     }
 
     const doc = new PDFDocument({
+      pdfVersion: '1.4',
       size: 'A4',
       margins: { top: 40, bottom: 45, left: 45, right: 45 },
       bufferPages: true,
@@ -243,6 +244,7 @@ export class PDFGeneratorService {
     }
 
     const doc = new PDFDocument({
+      pdfVersion: '1.4',
       size: 'A4',
       margins: { top: 40, bottom: 45, left: 45, right: 45 },
       bufferPages: true,
