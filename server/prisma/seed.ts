@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -169,6 +170,73 @@ async function main() {
     });
   }
   console.log('Database successfully seeded with standard boards and blueprints.');
+
+  console.log('Seeding default institution and user accounts...');
+  let defaultInst = await prisma.institution.findFirst({
+    where: { name: 'Apex Institute of Science & Technology' }
+  });
+
+  if (!defaultInst) {
+    defaultInst = await prisma.institution.create({
+      data: {
+        name: 'Apex Institute of Science & Technology',
+        address: 'Knowledge Campus, Chennai, Tamil Nadu',
+        contactEmail: 'contact@apex.edu'
+      }
+    });
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const commonPasswordHash = await bcrypt.hash('12345678', salt);
+  const teacherPasswordHash = await bcrypt.hash('SecurePassword123!', salt);
+  const adminPasswordHash = await bcrypt.hash('AdminPassword123!', salt);
+
+  const initialUsers = [
+    {
+      email: 'manasa@158',
+      name: 'Manasa',
+      role: 'TEACHER',
+      passwordHash: commonPasswordHash,
+      institutionId: defaultInst.id
+    },
+    {
+      email: 'manasa@gmail.com',
+      name: 'Manasa',
+      role: 'TEACHER',
+      passwordHash: commonPasswordHash,
+      institutionId: defaultInst.id
+    },
+    {
+      email: 'teacher@qgenai.edu',
+      name: 'Senior Teacher',
+      role: 'TEACHER',
+      passwordHash: teacherPasswordHash,
+      institutionId: defaultInst.id
+    },
+    {
+      email: 'admin@qgenai.edu',
+      name: 'System Administrator',
+      role: 'ADMIN',
+      passwordHash: adminPasswordHash,
+      institutionId: defaultInst.id
+    }
+  ];
+
+  for (const user of initialUsers) {
+    await prisma.user.upsert({
+      where: { email: user.email },
+      update: {
+        passwordHash: user.passwordHash,
+        institutionId: user.institutionId
+      },
+      create: user
+    });
+  }
+  console.log('Default accounts successfully verified and seeded:');
+  console.log(' - manasa@158 (password: 12345678)');
+  console.log(' - manasa@gmail.com (password: 12345678)');
+  console.log(' - teacher@qgenai.edu (password: SecurePassword123!)');
+  console.log(' - admin@qgenai.edu (password: AdminPassword123!)');
 }
 
 main()

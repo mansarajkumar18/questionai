@@ -1,8 +1,20 @@
 import axios from 'axios';
 
 // Resolve base URL from environment or fallback to relative path
-const rawBaseUrl = import.meta.env.VITE_API_URL || '/api/v1';
-export const API_BASE_URL = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
+const rawBaseUrl = (import.meta.env.VITE_API_URL || '').trim();
+
+let resolvedUrl = '/api/v1';
+if (rawBaseUrl) {
+  const cleanUrl = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
+  // If the user configured an external URL without /api or /api/v1, default to appending /api/v1
+  if (!cleanUrl.endsWith('/api/v1') && !cleanUrl.endsWith('/api')) {
+    resolvedUrl = `${cleanUrl}/api/v1`;
+  } else {
+    resolvedUrl = cleanUrl;
+  }
+}
+
+export const API_BASE_URL = resolvedUrl;
 
 /**
  * Helper to construct full backend URLs for file downloads, PDFs, and assets.
@@ -37,11 +49,10 @@ api.interceptors.request.use((config) => {
 // Interceptor for response errors
 api.interceptors.response.use(
   (response) => {
-    // Detect if Vercel returned HTML index.html instead of JSON API response
+    // Detect if Vercel or proxy returned HTML (such as index.html) instead of JSON API response
     if (
       typeof response.data === 'string' &&
-      response.data.includes('<!doctype html>') &&
-      response.config.url?.includes('/auth/')
+      (response.data.toLowerCase().includes('<!doctype html>') || response.data.includes('<html'))
     ) {
       return Promise.reject({
         response: {
@@ -49,7 +60,7 @@ api.interceptors.response.use(
           data: {
             success: false,
             message:
-              'Backend service unreachable. Please ensure the backend is deployed and VITE_API_URL is configured in Vercel.',
+              'Backend service unreachable. Vercel served HTML instead of the API response. Please configure VITE_API_URL in Vercel to point to your deployed backend (e.g., Render/Railway).',
           },
         },
       });

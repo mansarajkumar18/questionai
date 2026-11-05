@@ -238,11 +238,10 @@ export const PaperWorkbench: React.FC = () => {
         <div className="flex items-center gap-2 pt-4">
           <button
             onClick={() => setActiveTab('paper')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
-              activeTab === 'paper'
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${activeTab === 'paper'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100'
+              }`}
           >
             <FileText className="w-4 h-4" />
             <span>Question Paper ({paper.questions?.length || 0} Questions)</span>
@@ -250,11 +249,10 @@ export const PaperWorkbench: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('answers')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
-              activeTab === 'answers'
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${activeTab === 'answers'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100'
+              }`}
           >
             <KeyRound className="w-4 h-4" />
             <span>Answer Key & Marking Scheme</span>
@@ -262,11 +260,10 @@ export const PaperWorkbench: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('audit')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
-              activeTab === 'audit'
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${activeTab === 'audit'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100'
+              }`}
           >
             <ShieldCheck className="w-4 h-4" />
             <span>10-Point Quality Audit</span>
@@ -319,13 +316,12 @@ export const PaperWorkbench: React.FC = () => {
                     {q.questionType}
                   </span>
                   <span
-                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${
-                      q.difficulty === 'BASIC'
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : q.difficulty === 'HARD'
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${q.difficulty === 'BASIC'
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : q.difficulty === 'HARD'
                         ? 'bg-rose-50 text-rose-700'
                         : 'bg-amber-50 text-amber-700'
-                    }`}
+                      }`}
                   >
                     {q.difficulty}
                   </span>

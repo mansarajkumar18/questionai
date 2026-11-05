@@ -51,15 +51,29 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoints (both /api/health and /api/v1/health)
+// Health check endpoints
 app.use('/api', healthRoutes);
 app.use('/api/v1', healthRoutes);
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/settings', settingsRoutes);
-app.use('/api/v1/boards', boardsRoutes);
-app.use('/api/v1/syllabus', syllabusRoutes);
-app.use('/api/v1/papers', papersRoutes);
-app.use('/api/v1/public', publicShareRoutes);
+app.use('/', healthRoutes);
+
+// Modular API routes with multi-prefix resilience
+const apiModules = [
+  { path: '/auth', router: authRoutes },
+  { path: '/settings', router: settingsRoutes },
+  { path: '/boards', router: boardsRoutes },
+  { path: '/syllabus', router: syllabusRoutes },
+  { path: '/papers', router: papersRoutes },
+  { path: '/public', router: publicShareRoutes },
+];
+
+apiModules.forEach(({ path: routePath, router: routeHandler }) => {
+  // Support /api/v1/* (primary standard)
+  app.use(`/api/v1${routePath}`, routeHandler);
+  // Support /api/* (fallback if VITE_API_URL omits /v1)
+  app.use(`/api${routePath}`, routeHandler);
+  // Support /* (fallback if reverse proxy strips /api)
+  app.use(routePath, routeHandler);
+});
 
 // Centralized error handler
 app.use(errorHandler);
