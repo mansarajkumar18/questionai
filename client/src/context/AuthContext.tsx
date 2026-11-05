@@ -36,35 +36,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return DEFAULT_WORKSPACE_USER;
     }
   });
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('qgen_token') || 'direct_access_token');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [token] = useState<string | null>('direct_access');
+  const [loading] = useState<boolean>(false);
 
   const refreshUser = async () => {
+    // In direct public workspace mode, user context is loaded from local workspace settings
     try {
-      const res = await api.get('/auth/me');
-      if (res.data?.success && res.data?.user) {
-        setUser(res.data.user);
-        localStorage.setItem('qgen_user', JSON.stringify(res.data.user));
+      const saved = localStorage.getItem('qgen_user');
+      if (saved) {
+        setUser(JSON.parse(saved));
       }
     } catch {
-      // Backend not yet connected or offline: maintain default workspace user
+      // Keep default workspace user
     }
   };
 
-  useEffect(() => {
-    refreshUser();
-  }, []);
-
-  const login = async () => {
-    return { success: true };
-  };
-
-  const register = async () => {
-    return { success: true };
-  };
-
+  const login = async () => ({ success: true });
+  const register = async () => ({ success: true });
   const logout = () => {
-    // In public access mode, reset to default workspace user
     setUser(DEFAULT_WORKSPACE_USER);
   };
 

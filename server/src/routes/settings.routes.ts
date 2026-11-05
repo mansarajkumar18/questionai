@@ -82,5 +82,36 @@ router.put('/ai', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
+// Update Institution Profile via settings
+router.put('/institution', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { name, address, contactEmail, examHeaderConfig } = req.body;
+    let inst = await prisma.institution.findFirst();
+    if (inst) {
+      inst = await prisma.institution.update({
+        where: { id: inst.id },
+        data: {
+          name: name?.trim(),
+          address,
+          contactEmail,
+          examHeaderConfig: examHeaderConfig ? JSON.stringify(examHeaderConfig) : undefined,
+        },
+      });
+    } else {
+      inst = await prisma.institution.create({
+        data: {
+          name: name?.trim() || 'My Educational Institution',
+          address,
+          contactEmail,
+          examHeaderConfig: examHeaderConfig ? JSON.stringify(examHeaderConfig) : undefined,
+        },
+      });
+    }
+    res.json({ success: true, institution: inst });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 export default router;
 

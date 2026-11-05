@@ -143,15 +143,6 @@ export const CreateWizard: React.FC = () => {
 
   useEffect(() => {
     fetchBoards();
-
-    api
-      .get('/auth/me')
-      .then((res) => {
-        if (res.data?.user?.institution?.name) {
-          setInstitutionName(res.data.user.institution.name);
-        }
-      })
-      .catch(() => {});
   }, []);
 
   // Recalculate section marks

@@ -102,14 +102,21 @@ export const Settings: React.FC = () => {
     setSavingInst(true);
     setInstSaveSuccess(false);
     try {
-      const res = await api.put('/auth/institution', {
+      const res = await api.put('/settings/institution', {
         name: instName,
         address: instAddress,
         contactEmail: instEmail,
       });
       if (res.data.success) {
         setInstSaveSuccess(true);
-        await refreshUser();
+        if (res.data.institution) {
+          const updatedUser = {
+            ...user,
+            institution: res.data.institution,
+          };
+          localStorage.setItem('qgen_user', JSON.stringify(updatedUser));
+          await refreshUser();
+        }
         setTimeout(() => setInstSaveSuccess(false), 3000);
       }
     } catch (err) {
