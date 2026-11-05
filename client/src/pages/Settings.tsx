@@ -160,11 +160,10 @@ export const Settings: React.FC = () => {
               </div>
             </div>
             <span
-              className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                isConfigured
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-amber-50 text-amber-700 border border-amber-200'
-              }`}
+              className={`px-2.5 py-1 rounded-full text-xs font-semibold ${isConfigured
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border border-amber-200'
+                }`}
             >
               {isConfigured ? 'Active & Ready' : 'Key Required'}
             </span>
@@ -226,11 +225,10 @@ export const Settings: React.FC = () => {
 
             {testResult && (
               <div
-                className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
-                  testResult.success
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                    : 'bg-rose-50 border-rose-200 text-rose-800'
-                }`}
+                className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${testResult.success
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : 'bg-rose-50 border-rose-200 text-rose-800'
+                  }`}
               >
                 {testResult.success ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
