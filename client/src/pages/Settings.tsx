@@ -13,6 +13,13 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
+const DEFAULT_MODELS = [
+  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash-Lite (Recommended - Ultra Fast & High Throughput)' },
+  { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash-Lite (Fast & Precise Structured JSON)' },
+  { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash (Balanced Reasoning & Depth)' },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Legacy)' },
+];
+
 export const Settings: React.FC = () => {
   const { user, refreshUser } = useAuth();
 
@@ -20,8 +27,8 @@ export const Settings: React.FC = () => {
   const [apiKey, setApiKey] = useState('');
   const [maskedKey, setMaskedKey] = useState('');
   const [isConfigured, setIsConfigured] = useState(false);
-  const [model, setModel] = useState('gemini-2.5-flash');
-  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [model, setModel] = useState('gemini-3.5-flash-lite');
+  const [availableModels, setAvailableModels] = useState<any[]>(DEFAULT_MODELS);
   const [testingKey, setTestingKey] = useState(false);
   const [testResult, setTestResult] = useState<{
     success: boolean;
@@ -49,8 +56,12 @@ export const Settings: React.FC = () => {
       if (res.data.success) {
         setIsConfigured(res.data.isConfigured);
         setMaskedKey(res.data.maskedKey || '');
-        setModel(res.data.model);
-        setAvailableModels(res.data.availableModels || []);
+        if (res.data.model) {
+          setModel(res.data.model);
+        }
+        if (Array.isArray(res.data.availableModels) && res.data.availableModels.length > 0) {
+          setAvailableModels(res.data.availableModels);
+        }
       }
     } catch (err) {
       console.error('Failed to load AI settings', err);
