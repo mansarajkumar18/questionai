@@ -1,53 +1,89 @@
-# Deploying Q-GEN AI on Vercel
+# Deploying Q-GEN AI (Production Guide)
 
-This guide outlines how to deploy **Q-GEN AI** using Vercel.
-
----
-
-## 1. Deploying the Frontend on Vercel (2-Minute Setup)
-
-### Step 1: Import Repository
-1. Log in to [Vercel](https://vercel.com).
-2. Click **Add New...** > **Project**.
-3. Select and import your GitHub repository: `mansarajkumar18/questionai`.
-
-### Step 2: Configure Project Settings
-- **Framework Preset:** `Vite` (automatically detected).
-- **Root Directory:**
-  - If deploying from root: Leave as `./` (Root `vercel.json` will automatically build `client/dist`).
-  - Or click **Edit** and set Root Directory to `client`.
-- **Build Command:** `npm run build`
-- **Output Directory:** `dist`
-
-### Step 3: Environment Variables
-Add the following in Vercel Project Settings > **Environment Variables**:
-- `VITE_API_URL`: Your deployed backend API URL (e.g. `https://your-backend.onrender.com/api/v1` or Railway URL).
-
-### Step 4: Click Deploy
-Vercel will build the frontend and issue your live HTTPS URL (e.g., `https://questionai.vercel.app`).
+This guide provides end-to-end instructions for deploying **Q-GEN AI** with the frontend on **Vercel** and the backend on **Render** (or Railway).
 
 ---
 
-## 2. Deploying the Backend (Recommended: Render / Railway)
+## Architecture Overview
 
-Because Q-GEN AI features a persistent SQLite/PostgreSQL database via Prisma, file upload processing (`uploads/`), and OCR engines, hosting the backend on a Node server environment ensures persistent storage and fast responses:
+Q-GEN AI is a decoupled full-stack application:
+- **Frontend (`client/`):** React 18, Vite 5, Tailwind CSS. Hosted statically on **Vercel Edge Network**.
+- **Backend (`server/`):** Node.js Express, Prisma ORM, SQLite database (`dev.db`), Google Gemini AI, PDFKit. Hosted as a persistent service on **Render** or **Railway**.
 
-### Option A: Render (Free & Fast)
-1. Go to [Render.com](https://render.com) and click **New Web Service**.
-2. Connect `mansarajkumar18/questionai`.
-3. Set:
+---
+
+## Why Authentication Failed with a 404 on Vercel
+
+If you deploy **only** the frontend to Vercel without deploying the backend or without setting `VITE_API_URL`:
+1. Vercel only serves static HTML/JS/CSS files from `client/dist`.
+2. The browser makes requests to `https://your-vercel-domain.vercel.app/api/v1/auth/login`.
+3. Because Vercel has no Node.js Express server running, Vercel looks for a static file named `/api/v1/auth/login`.
+4. It does not exist, so Vercel returns **HTTP 404 Not Found**.
+
+**Solution:** Deploy the `server/` directory to Render (takes 2 minutes, free), copy the Render URL, and add `VITE_API_URL` to Vercel.
+
+---
+
+## Step 1: Deploy Backend to Render (2 Minutes)
+
+1. Sign in to [Render.com](https://render.com).
+2. Click **New +** > **Web Service**.
+3. Connect your GitHub repository: `mansarajkumar18/questionai`.
+4. Fill in the deployment details:
+   - **Name:** `qgen-api` (or any name you prefer)
+   - **Region:** Any (e.g. Frankfurt, Singapore, Oregon)
+   - **Branch:** `main`
    - **Root Directory:** `server`
-   - **Build Command:** `npm install && npx prisma db push && npx prisma generate && npx tsx prisma/seed.ts && npm run build`
-   - **Start Command:** `npm start`
-4. Add Environment Variables:
-   - `JWT_SECRET`: `your_random_secret_here`
-   - `GEMINI_API_KEY`: `your_gemini_api_key_here`
-   - `GEMINI_MODEL`: `gemini-2.5-flash`
-   - `PORT`: `5000`
-5. Copy your Render backend URL (e.g., `https://questionai-api.onrender.com`) and paste it as `VITE_API_URL` in your Vercel frontend project!
+   - **Runtime:** `Node`
+   - **Build Command:**
+     ```bash
+     npm install && npx prisma generate && npx tsx prisma/seed.ts && npm run build
+     ```
+   - **Start Command:**
+     ```bash
+     npm start
+     ```
+   - **Instance Type:** `Free`
+5. Under **Environment Variables**, add:
+   | Key | Value | Description |
+   | :--- | :--- | :--- |
+   | `PORT` | `5000` | Port for Express server |
+   | `JWT_SECRET` | `generate_a_random_32_char_secret_string` | Secret key for signing JWT tokens |
+   | `GEMINI_API_KEY` | `your_actual_gemini_api_key` | From [Google AI Studio](https://aistudio.google.com/) |
+   | `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model for AI question generation |
+   | `NODE_ENV` | `production` | Production mode |
+6. Click **Create Web Service**.
+7. Once deployed, Render will issue a URL like:
+   `https://qgen-api.onrender.com`
+8. Verify it by opening `https://qgen-api.onrender.com/api/health` in your browser. You should see:
+   ```json
+   { "status": "ok", "service": "Q-GEN AI Backend Engine", "database": "healthy" }
+   ```
 
-### Option B: Railway (1-Click)
-1. Go to [Railway.app](https://railway.app) > **New Project** > **Deploy from GitHub repo**.
-2. Select `server` folder as root.
-3. Railway automatically detects Node, installs packages, runs Prisma migrations, and assigns an HTTPS URL.
+---
 
+## Step 2: Configure Frontend on Vercel
+
+1. Go to your project on [Vercel Dashboard](https://vercel.com).
+2. Navigate to **Settings** > **Environment Variables**.
+3. Add the following variable:
+   - **Key:** `VITE_API_URL`
+   - **Value:** `https://qgen-api.onrender.com/api/v1` *(replace with your actual Render URL)*
+   - **Environments:** Check `Production`, `Preview`, and `Development`.
+4. Click **Save**.
+5. Go to the **Deployments** tab, click the **...** (three dots) next to the latest deployment, and click **Redeploy** (or push a new commit to GitHub).
+   > *Note: Vite bakes environment variables into the static bundle during the build. Redeploying is required for the new variable to take effect.*
+
+---
+
+## Step 3: Log In to Production
+
+Once redeployed, open your Vercel URL (e.g., `https://questionai.vercel.app/login`):
+- **Email / Username:** `manasa@158` (or `manasa@gmail.com`)
+- **Password:** `12345678`
+
+Or log in with the administrator account:
+- **Email:** `admin@qgenai.edu`
+- **Password:** `AdminPassword123!`
+
+The request will reach your Render backend, validate the password against SQLite, and authenticate into the Dashboard!
